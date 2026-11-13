@@ -1,10 +1,1 @@
-{% extends "base.html" %}
-
-{% block title %}Home · Financial Report Generator{% endblock %}
-
-{% block content %}
-  <h1 class="h3">Financial Report Generator</h1>
-  <p class="text-secondary mb-0">
-    Prepare income statements, balance sheets, and cash flow statements.
-  </p>
-{% endblock %}
+{% extends 'base.html' %}{% block content %}<div class="row align-items-center py-5"><div class="col-lg-7"><p class="text-primary fw-semibold">FINANCIAL REPORTING FOR SMALL BUSINESSES</p><h1 class="display-5 fw-bold">Know where your business stands.</h1><p class="lead text-secondary">Record income and expenses, import transactions, and produce clear statements from one balanced ledger.</p>{% if config.ENABLE_PUBLIC_REGISTRATION %}<a class="btn btn-primary btn-lg me-2" href="{{ url_for('main.register') }}">Create company</a>{% endif %}<a class="btn btn-outline-secondary btn-lg" href="{{ url_for('main.login') }}">Sign in</a></div></div>{% endblock %}

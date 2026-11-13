@@ -19,6 +19,44 @@ instance/
 *.db
 *.sqlite
 *.sqlite3
+*.db-*
+*.sqlite-*
+*.sqlite3-*
+*.db.bak
+*.db.backup
+*.sqlite.bak
+*.sqlite.backup
+*.sqlite3.bak
+*.sqlite3.backup
+
+# Common local database backup and dump formats
+*.bak
+*.backup
+*.dump
+*.dump.gz
+*.sql.gz
+*.db.gz
+*.sqlite.gz
+*.sqlite3.gz
+*.db.zip
+*.sqlite.zip
+*.sqlite3.zip
+/backups/
+/db_backups/
+/database_backups/
+
+# Local application data and generated private artifacts
+/uploads/
+/private_uploads/
+/generated_reports/
+/test_data/
+/local_test_data/
+*.log
+/logs/
+/tmp/
+/temp/
+*.tmp
+*.temp
 
 # Tests and coverage
 .pytest_cache/

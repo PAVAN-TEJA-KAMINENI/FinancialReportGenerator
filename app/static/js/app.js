@@ -1,1 +1,1 @@
-// Application scripts. Dashboard charts are added with later features.
+// Shared application behavior is intentionally small; the dashboard owns its chart.
