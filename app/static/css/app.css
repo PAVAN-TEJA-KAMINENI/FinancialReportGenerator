@@ -1,0 +1,5 @@
+/* Application styles that sit on top of the Bootstrap layout. */
+
+body {
+    background-color: #f8f9fa;
+}
