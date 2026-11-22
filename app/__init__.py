@@ -2,12 +2,28 @@
 
 import os
 import click
+from decimal import Decimal
 
 from flask import Flask, render_template
 
 from app.blueprints import register_blueprints
 from app.config import get_config
 from app.extensions import db, login_manager, csrf, migrate
+
+
+def format_money(value, currency="INR"):
+    """Format Decimal values with Indian digit grouping for INR display."""
+    amount = value if isinstance(value, Decimal) else Decimal(str(value or 0))
+    negative = amount < 0
+    whole, fraction = f"{abs(amount):.2f}".split(".")
+    if len(whole) > 3:
+        last_three, leading = whole[-3:], whole[:-3]
+        groups=[]
+        while leading:
+            groups.insert(0,leading[-2:]); leading=leading[:-2]
+        whole=",".join(groups+[last_three])
+    prefix="₹" if currency == "INR" else f"{currency} "
+    return f"{'-' if negative else ''}{prefix}{whole}.{fraction}"
 
 
 def create_app(config_name: str | None = None) -> Flask:
@@ -28,6 +44,7 @@ def create_app(config_name: str | None = None) -> Flask:
     config_class = get_config(config_name)
     app.config.from_object(config_class)
     config_class.init_app(app)
+    app.jinja_env.filters["money"] = format_money
 
     # The instance folder holds the local SQLite file and is not committed.
     os.makedirs(app.instance_path, exist_ok=True)

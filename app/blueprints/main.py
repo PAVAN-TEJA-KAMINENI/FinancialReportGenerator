@@ -10,7 +10,7 @@ from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 from app.extensions import db
 from app.models import Company, User, Account, JournalEntry, JournalEntryLine, CsvImportBatch, OpeningBalanceInitialization
-from app.services import seed_accounts, post_entry, reports, parse_csv, csv_source_key
+from app.services import seed_accounts, post_entry, reports, ledger, parse_csv, csv_source_key
 
 main_bp=Blueprint("main",__name__)
 
@@ -152,7 +152,21 @@ def delete_account(account_id):
 def dashboard():
     today=date.today(); start=date(today.year,today.month,1); data=reports(current_user.company_id,start,today)
     recent=JournalEntry.query.filter_by(company_id=current_user.company_id,status="posted").order_by(JournalEntry.date.desc(),JournalEntry.id.desc()).limit(8).all()
-    return render_template("dashboard.html",data=data,start=start,end=today,recent=recent)
+    month_starts=[]; year=today.year; month=today.month
+    for _ in range(12):
+        month_starts.append(date(year,month,1)); month-=1
+        if month==0: month=12; year-=1
+    month_starts.reverse(); monthly={m.strftime("%Y-%m"):{"income":Decimal("0.00"),"expenses":Decimal("0.00")} for m in month_starts}
+    for line,entry,account in ledger(current_user.company_id,start=month_starts[0],end=today):
+        bucket=monthly.get(entry.date.strftime("%Y-%m"))
+        if bucket is None: continue
+        if account.account_type=="income": bucket["income"]+=line.credit-line.debit
+        elif account.account_type=="expense": bucket["expenses"]+=line.debit-line.credit
+    month_labels=[m.strftime("%b") for m in month_starts]
+    monthly_income=[int(monthly[m.strftime("%Y-%m")]["income"]*100) for m in month_starts]
+    monthly_expenses=[int(monthly[m.strftime("%Y-%m")]["expenses"]*100) for m in month_starts]
+    return render_template("dashboard.html",data=data,start=start,end=today,recent=recent,
+        month_labels=month_labels,monthly_income=monthly_income,monthly_expenses=monthly_expenses)
 
 @main_bp.route("/transactions",methods=["GET","POST"])
 @login_required

@@ -1,9 +1,1 @@
-{% extends 'base.html' %}
-{% block title %}{{ code }} · Financial Report Generator{% endblock %}
-{% block content %}
-<section class="py-5 text-center">
-  <h1 class="display-4">{{ code }}</h1>
-  <p class="lead">{{ message }}</p>
-  <a class="btn btn-primary" href="{{ url_for('main.index') }}">Return home</a>
-</section>
-{% endblock %}
+{% extends 'base.html' %}{% block title %}{{ code }} · Financial Report Generator{% endblock %}{% block content %}<section class="auth-card text-center"><span class="metric-icon red mx-auto mb-3" style="width:54px;height:54px;font-size:20px">{{ code }}</span><div class="eyebrow">REQUEST STATUS</div><h1 class="auth-heading">{{ 'Page not found' if code==404 else 'Something went wrong' }}</h1><p class="auth-caption">{{ message }}</p><a class="btn btn-primary" href="{{ url_for('main.index') }}">Return home</a></section>{% endblock %}

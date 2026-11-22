@@ -1,3 +1,78 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}Financial Report Generator{% endblock %}</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="{{ url_for('static',filename='css/app.css') }}"></head><body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark"><div class="container"><a class="navbar-brand" href="{{ url_for('main.index') }}">Ledgerwise</a><div class="navbar-nav me-auto">{% if current_user.is_authenticated %}<a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a><a class="nav-link" href="{{ url_for('main.transactions') }}">Transactions</a><a class="nav-link" href="{{ url_for('main.report_page') }}">Reports</a>{% if current_user.is_admin %}<a class="nav-link" href="{{ url_for('main.opening') }}">Opening balances</a><a class="nav-link" href="{{ url_for('main.accounts') }}">Accounts</a><a class="nav-link" href="{{ url_for('main.team') }}">Team</a>{% endif %}{% endif %}</div>{% if current_user.is_authenticated %}<span class="navbar-text me-3">{{ current_user.company.name }} · {{ current_user.name }}</span><form method="post" action="{{ url_for('main.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-light btn-sm">Sign out</button></form>{% endif %}</div></nav>
-<main class="container py-4">{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script><script src="{{ url_for('static',filename='js/app.js') }}"></script>{% block scripts %}{% endblock %}</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080d17">
+  <title>{% block title %}Financial Report Generator{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/app.css') }}">
+</head>
+<body class="{% if current_user.is_authenticated %}app-body{% else %}public-body{% endif %}">
+<svg xmlns="http://www.w3.org/2000/svg" class="svg-library" aria-hidden="true">
+  <symbol id="icon-brand" viewBox="0 0 32 32"><path d="M4 24 12 16l5 4 10-12"/><path d="M20 8h7v7"/><path d="M5 27h23"/></symbol>
+  <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="icon-arrows" viewBox="0 0 24 24"><path d="M4 7h14l-3-3M20 17H6l3 3"/><path d="m16 4 3 3-3 3M8 14l-3 3 3 3"/></symbol>
+  <symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5z"/><path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H20M8 7h8M8 10h8"/></symbol>
+  <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 15V3m-4 4 4-4 4 4"/><path d="M5 12v8h14v-8"/></symbol>
+  <symbol id="icon-report" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h7M9 16h7"/></symbol>
+  <symbol id="icon-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 6"/></symbol>
+  <symbol id="icon-bank" viewBox="0 0 24 24"><path d="m3 9 9-6 9 6M5 10v8m5-8v8m4-8v8m5-8v8M3 21h18M3 18h18"/></symbol>
+  <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/></symbol>
+  <symbol id="icon-trend" viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-9"/><path d="M15 6h6v6"/></symbol>
+  <symbol id="icon-wallet" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18m-5 5h2"/></symbol>
+  <symbol id="icon-trophy" viewBox="0 0 24 24"><path d="M8 21h8m-4-4v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a4 4 0 0 0 4 4m9-6h3v2a4 4 0 0 1-4 4"/></symbol>
+  <symbol id="icon-coins" viewBox="0 0 24 24"><ellipse cx="9" cy="6" rx="6" ry="3"/><path d="M3 6v5c0 1.7 2.7 3 6 3m-6-3c0 1.7 2.7 3 6 3M15 9c3.3 0 6 1.3 6 3v6c0 1.7-2.7 3-6 3s-6-1.3-6-3v-6c0-1.7 2.7-3 6-3z"/><path d="M9 12c0 1.7 2.7 3 6 3s6-1.3 6-3m-12 6c0 1.7 2.7 3 6 3s6-1.3 6-3"/></symbol>
+  <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18m-13 4h3m3 0h2m-8 3h3"/></symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="icon-file" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7m-7 4h7"/></symbol>
+  <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></symbol>
+  <symbol id="icon-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10m-7 6h4"/></symbol>
+  <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></symbol>
+  <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+</svg>
+
+{% if current_user.is_authenticated %}
+<div class="app-shell">
+  <div class="sidebar-scrim" data-sidebar-close></div>
+  <aside class="sidebar" id="appSidebar">
+    <a class="brand" href="{{ url_for('main.dashboard') }}"><span class="brand-mark"><svg class="brand-icon"><use href="#icon-brand"/></svg></span><span><strong>FinanceFlow</strong><small>Financial Report Generator</small></span></a>
+    <div class="sidebar-company"><span class="company-avatar">{{ current_user.company.name[:1]|upper }}</span><span class="company-label"><small>WORKSPACE</small><strong>{{ current_user.company.name }}</strong></span></div>
+    <nav class="side-nav" aria-label="Main navigation">
+      <a class="nav-item {{ 'active' if request.endpoint=='main.dashboard' else '' }}" href="{{ url_for('main.dashboard') }}"><svg class="icon"><use href="#icon-grid"/></svg><span>Dashboard</span></a>
+      <div class="nav-section-label">FINANCE</div>
+      <a class="nav-item {{ 'active' if request.endpoint=='main.transactions' else '' }}" href="{{ url_for('main.transactions') }}"><svg class="icon"><use href="#icon-arrows"/></svg><span>Transactions</span></a>
+      {% if current_user.is_admin %}<a class="nav-item {{ 'active' if request.endpoint in ['main.accounts','main.edit_account','main.delete_account'] else '' }}" href="{{ url_for('main.accounts') }}"><svg class="icon"><use href="#icon-book"/></svg><span>Chart of Accounts</span></a>{% endif %}
+      <a class="nav-item {{ 'active' if request.endpoint=='main.import_csv' else '' }}" href="{{ url_for('main.import_csv') }}"><svg class="icon"><use href="#icon-upload"/></svg><span>Import CSV</span></a>
+      <div class="nav-section-label">REPORTING</div>
+      <a class="nav-item {{ 'active' if request.endpoint in ['main.report_page','main.export'] else '' }}" href="{{ url_for('main.report_page') }}"><svg class="icon"><use href="#icon-report"/></svg><span>Financial Reports</span><svg class="nav-chevron"><use href="#icon-chevron"/></svg></a>
+      <div class="nav-subitems"><a href="{{ url_for('main.report_page') }}#income-statement">Income Statement</a><a href="{{ url_for('main.report_page') }}#balance-sheet">Balance Sheet</a><a href="{{ url_for('main.report_page') }}#cash-flow">Cash Flow Statement</a></div>
+      {% if current_user.is_admin %}<div class="nav-section-label">ADMINISTRATION</div><a class="nav-item {{ 'active' if request.endpoint=='main.opening' else '' }}" href="{{ url_for('main.opening') }}"><svg class="icon"><use href="#icon-bank"/></svg><span>Opening Balances</span></a><a class="nav-item {{ 'active' if request.endpoint=='main.team' else '' }}" href="{{ url_for('main.team') }}"><svg class="icon"><use href="#icon-users"/></svg><span>Team</span></a>{% endif %}
+    </nav>
+    <div class="sidebar-bottom"><div class="user-block"><div class="user-avatar">{{ current_user.name[:1]|upper }}</div><div class="user-meta"><strong>{{ current_user.name }}</strong><span>{{ 'Administrator' if current_user.is_admin else 'Accountant' }}</span></div></div><form method="post" action="{{ url_for('main.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-button" type="submit"><svg class="icon"><use href="#icon-logout"/></svg>Sign out</button></form></div>
+  </aside>
+  <section class="main-column">
+    <header class="topbar"><button class="mobile-menu" type="button" aria-label="Open navigation" data-sidebar-open><svg class="icon"><use href="#icon-menu"/></svg></button><div class="breadcrumb"><svg class="icon breadcrumb-home"><use href="#icon-home"/></svg><span>/</span><span>{% block breadcrumb %}Workspace{% endblock %}</span></div><div class="topbar-spacer"></div><div class="topbar-company"><span class="status-dot"></span>{{ current_user.company.name }}</div><div class="topbar-user">{{ current_user.name[:1]|upper }}</div></header>
+  <main class="page-content">
+{% else %}
+<main class="public-shell">
+{% endif %}
+  {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="alert app-alert alert-{{ category }}" role="alert"><span>{{ message }}</span><button type="button" class="alert-close" data-dismiss-alert aria-label="Dismiss">×</button></div>{% endfor %}{% endwith %}
+  {% block content %}{% endblock %}
+{% if current_user.is_authenticated %}
+  </main><footer class="app-footer"><span>{{ current_user.company.name }} · {{ current_user.company.currency }}</span><span>Financial Report Generator</span></footer>
+  </section>
+</div>
+{% else %}
+</main>
+{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static',filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body></html>
